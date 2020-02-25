@@ -1,0 +1,5 @@
+D:\RiderProjects\CustomMathLibrary\CustomMathLibrary\bin\Debug\CustomMathLibrary.dll
+D:\RiderProjects\CustomMathLibrary\CustomMathLibrary\bin\Debug\CustomMathLibrary.pdb
+D:\RiderProjects\CustomMathLibrary\CustomMathLibrary\obj\Debug\CustomMathLibrary.csprojAssemblyReference.cache
+D:\RiderProjects\CustomMathLibrary\CustomMathLibrary\obj\Debug\CustomMathLibrary.dll
+D:\RiderProjects\CustomMathLibrary\CustomMathLibrary\obj\Debug\CustomMathLibrary.pdb

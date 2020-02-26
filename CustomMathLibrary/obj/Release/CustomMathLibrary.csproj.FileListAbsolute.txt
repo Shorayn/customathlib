@@ -3,3 +3,6 @@ D:\RiderProjects\CustomMathLibrary\CustomMathLibrary\bin\Release\CustomMathLibra
 D:\RiderProjects\CustomMathLibrary\CustomMathLibrary\obj\Release\CustomMathLibrary.csprojAssemblyReference.cache
 D:\RiderProjects\CustomMathLibrary\CustomMathLibrary\obj\Release\CustomMathLibrary.dll
 D:\RiderProjects\CustomMathLibrary\CustomMathLibrary\obj\Release\CustomMathLibrary.pdb
+D:\RiderProjects\CustomMathLibrary\CustomMathLibrary\bin\Release\MathNet.Numerics.dll
+D:\RiderProjects\CustomMathLibrary\CustomMathLibrary\bin\Release\MathNet.Numerics.xml
+D:\RiderProjects\CustomMathLibrary\CustomMathLibrary\obj\Release\CustomMathLibrary.csproj.CopyComplete

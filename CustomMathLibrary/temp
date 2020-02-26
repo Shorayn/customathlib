@@ -1,0 +1,290 @@
+﻿ReferencepointsScript
+
+public Vector3 OrthogonalProjectionPointOnPlane(UpperJawPlaneData upperJawPlaneData, Vector3 point)
+		{
+			/*
+				 * Orthogonale Projektion: Pe(x) = x - ((x - r0) * n) / n * n) * n
+				 * x: der zu projezierende Vektor
+				 * r0: Verschiebung zum Ursprung
+				 * n: Normale der Ebene
+				 * 
+				 */
+
+
+			Vector3 normal = new Vector3(upperJawPlaneData.A, upperJawPlaneData.B, upperJawPlaneData.C).normalized;
+			float[][] parameterFormOfUjp = OcclusionSurfaceManager.ConvertCoordFormToParamForm(new[]
+				{upperJawPlaneData.D, upperJawPlaneData.A, upperJawPlaneData.B, upperJawPlaneData.C});
+			Vector3 r0 = DataConverter.FloatArrayToVector3(parameterFormOfUjp[0]);
+			
+
+			// ##### Alternative #########
+			//Vector3 projectionPositionDirLeft = r0 + Vector3.ProjectOnPlane(positionDirLeft - r0, normal);
+			//Vector3 projectionPositionDirRight = r0 +  Vector3.ProjectOnPlane(positionDirRight- r0, normal);
+
+			float quotientLeft = Vector3.Dot(point - r0, normal) / Vector3.Dot(normal, normal);
+			Vector3 projectedPoint = point - quotientLeft * normal;
+			return projectedPoint;
+		}
+		
+        /// <summary>
+		/// Calculates the distance of a point to a straight line
+		/// </summary>
+		/// <param name="point">The point to calculate the distance for</param>
+		/// <param name="localVec">The local vector of the straight line</param>
+		/// <param name="distanceVec">The direction vector of the straight line</param>
+		/// <returns>The distance</returns>
+		public float DistancePointToStraightLine(Vector3 point, Vector3 localVec, Vector3 distanceVec)
+		{
+			// https://de.serlo.org/mathe/geometrie/analytische-geometrie/abstaende-winkel/abstaende/abstand-punktes-einer-geraden-berechnen-analytische-geometrie
+			return Vector3.Magnitude(Vector3.Cross(point - localVec, distanceVec)) / Vector3.Magnitude(distanceVec);
+		}
+		
+DentalArchMarginManager
+
+public static float EuclideanDistance(float[] p, float[] q)
+		{
+			if (q.Length !=2)
+				return Mathf.Sqrt(Mathf.Pow(q[0] - p[0], 2) + Mathf.Pow(q[1] - p[1], 2) + Mathf.Pow(q[1] - p[1], 2));
+			
+			return Mathf.Sqrt(Mathf.Pow(q[0] - p[0], 2) + Mathf.Pow(q[1] - p[1], 2));
+		}
+		
+OcclusionSurfaceHelper
+
+        /// <summary>
+        /// Calculate whether a straight line defined by its local vector and direction vector has a certain intersection with the given plane (in coordinate form)
+        /// using the lambda of the straight line
+        /// 
+        ///   http://www.songho.ca/math/line/line.html
+        ///   https://de.serlo.org/mathe/geometrie/analytische-geometrie/lagebeziehung-punkten-geraden-ebenen/lagebeziehung-geraden-einer-ebene/lagebeziehungen-geraden-ebenen
+        /// 
+        /// </summary>
+        /// <param name="planeCoords">The coefficients a, b, c, and d of the plane</param>
+        /// <param name="localVec">The local vector of the straight line</param>
+        /// <param name="dirVecPlus">+ The direction vector of the straight line</param>
+        /// <param name="dirVecMinus">- The direction vector of the straight line</param>
+        /// <returns>The intersection point as a Vector3</returns>
+        private Vector3 DetermineIntersectionForLineAndPlane(float[] planeCoords, Vector3 localVec, Vector3 dirVecPlus,
+            Vector3 dirVecMinus)
+        {
+            float nominator = -(planeCoords[0] * localVec.x + planeCoords[1] * localVec.y +
+                                planeCoords[2] * localVec.z +
+                                planeCoords[3]);
+            float denominatorPlus = planeCoords[0] * dirVecPlus.x + planeCoords[1] * dirVecPlus.y +
+                                    planeCoords[2] * dirVecPlus.z;
+            float denominatorMinus = planeCoords[0] * dirVecMinus.x + planeCoords[1] * dirVecMinus.y +
+                                     planeCoords[2] * dirVecMinus.z;
+
+
+            // Sonderfälle beachten
+
+            if (!float.IsNaN(nominator / denominatorPlus))
+            {
+                float lambda =
+                    nominator / denominatorPlus;
+                return localVec + lambda * dirVecPlus;
+            }
+
+            if (!float.IsNaN(nominator / denominatorMinus))
+            {
+                float lambda =
+                    nominator / denominatorMinus;
+                return localVec + lambda * dirVecPlus;
+            }
+
+            return Vector3.positiveInfinity;
+        }	
+        
+        private float[] ConvertParamTooCoordForm(Vector3 localVec, Vector3 dirVecOne, Vector3 dirVecTwo)
+        {
+            Vector3 normal = Vector3.Cross(dirVecOne, dirVecTwo);
+            return new[]
+            {
+                normal.x, normal.y, normal.z, -(normal.x * localVec.x + normal.y * localVec.y + normal.z * localVec.z)
+            };
+        }	
+        
+        
+OcclusionsSurfaceManager
+
+        private static double normalizedVector(double[] parameters)
+        {
+            return Math.Sqrt(Math.Pow(parameters[1], 2) + Math.Pow(parameters[2], 2) +
+                             Math.Pow(parameters[3], 2));
+        }
+        
+        public static double DistancePointToPlane(double[] parameters, float[] point)
+        {
+            double lengthOfNormal = normalizedVector(parameters);
+            //double distance = Math.Abs(1 / lengthOfNormal *
+            //               (point[0] * parameters[1] + point[1] * parameters[2] + point[2] * parameters[3]));
+
+            double distance = Math.Abs(
+                point[0] * parameters[1] + point[1] * parameters[2] + point[2] * parameters[3]);
+
+
+            return distance;
+        }
+        public static double[] ConvertNormalFormToHesseForm(double[] parameters)
+        {
+            double lengthOfNormal = normalizedVector(parameters);
+            double normalized = 1 / lengthOfNormal;
+            return new[]
+            {
+                normalized * parameters[0], normalized * parameters[1], normalized * parameters[0],
+                normalized * parameters[0]
+            };
+        }
+        
+UpperJawPlaneHelper
+
+		private static double CalculateMeanValue(double[] values)
+		{
+			double meanValue = 0;
+
+			for (int i = 0; i < values.Length; i++)
+				meanValue += values[i];
+
+			return meanValue / values.Length;
+		}
+
+		public static double[] CalculateCenterOfGravity(Vector3[] vertices)
+		{
+			double[][] verticesToDouble = DataConverter.TwoDimDoubleArrayVectorParser(vertices);
+
+			double xMean = CalculateMeanValue(GetOriginalXValues(verticesToDouble));
+			double yMean = CalculateMeanValue(GetOriginalYValues(verticesToDouble));
+			double zMean = CalculateMeanValue(GetOriginalZValues(verticesToDouble));
+
+			return new double[] {xMean, yMean, zMean};
+		}
+
+
+		public double[] PolarCoordinates(Vector3 coord, float pi)
+		{
+			float x = coord.x;
+			float y = coord.y;
+			float z = coord.z;
+			//Debug.Log("Normals: "+  x + " " + y + " " + z);
+
+			float r = Mathf.Sqrt(Mathf.Pow(x, 2) + Mathf.Pow(y, 2) + Mathf.Pow(z, 2));
+
+
+			//float theta = 0;
+			float theta = Mathf.Acos(z / r);
+
+			//Debug.Log("Theta: "+ theta);
+
+
+			//float phi = 0;
+			float phi = Mathf.Atan2(y, x) + Mathf.PI;
+
+
+			//+ 2 * Mathf.PI;
+			//Debug.Log("Phi: "+ phi);
+			//phi = phi - Mathf.Floor(phi / pi) * pi;
+
+			return new double[] {r, theta, phi};
+		}
+		
+		/// <summary>
+		/// Determines the 3x3 covariance matrix of given variances and covariances of the normal values
+		/// </summary>
+		/// <param name="values"></param>
+		/// <returns>The covariance matrix</returns>
+		public static double[,] CovarianceMatrix(Vector3[] values)
+		{
+			double[] variances = CalculateVariances(values);
+			double[] covariances = CalculateCovariances(values);
+
+			double[,] covarianceMatrix = new double[3, 3]
+			{
+				{variances[0], covariances[0], covariances[1]},
+				{covariances[0], variances[1], covariances[2]},
+				{covariances[1], covariances[2], variances[2]}
+			};
+			return covarianceMatrix;
+		}
+
+		/// <summary>
+		/// Calculate the covariance
+		/// </summary>
+		/// <param name="firstValues">First parameters Xi of X</param>
+		/// <param name="secondValues">Second parameters Yi of Y</param>
+		/// <param name="firstMean">Mean value of X</param>
+		/// <param name="secondMean">Mean value of Y</param>
+		/// <returns></returns>
+		private static double CalculateCovariance(double[] firstValues, double[] secondValues, double firstMean,
+			double secondMean)
+		{
+			double covariance = 0;
+
+			for (int i = 0; i < firstValues.Length; i++)
+			{
+				covariance += (firstValues[i] - firstMean) * (secondValues[i] - secondMean);
+			}
+
+			return covariance / firstValues.Length;
+		}
+
+
+		/// <summary>
+		/// Calculates the variance
+		/// </summary>
+		/// <param name="allValues">All Xi of X</param>
+		/// <param name="meanValue">Mean value of X</param>
+		/// <returns></returns>
+		private static double CalculateVariance(double[] allValues, double meanValue)
+		{
+			double variance = 0;
+
+			for (int i = 0; i < allValues.Length; i++)
+			{
+				variance += (allValues[i] - meanValue) * (allValues[i] - meanValue);
+			}
+
+			return 1d / allValues.Length * variance;
+		}
+
+
+		/// <summary>
+		/// Determines the eigenvectors of the input matrix in the form of [,]
+		/// </summary>
+		/// <param name="inertiaMatrixJ">The matrix</param>
+		/// <returns>The eigenvectors as Matrix of type double</returns>
+		public static Matrix<double> DetermineEigenvectors(double[,] inertiaMatrixJ)
+		{
+			var tmp = Matrix<double>.Build;
+			Matrix<double> inertiaMatrixJConverted = tmp.DenseOfArray(inertiaMatrixJ);
+			Evd<double> eigen = inertiaMatrixJConverted.Evd();
+			var temp = eigen.EigenValues;
+			return eigen.EigenVectors;
+		}
+
+		/// <summary>
+		/// Determines eigenvalues of given inertia Matrix
+		/// </summary>
+		/// <param name="inertiaMatrixJ"></param>
+		/// <returns>eigenvales as VectorComplex</returns>
+		public static Vector<Complex> DetermineEigenValues(double[,] inertiaMatrixJ)
+		{
+			var tmp = Matrix<double>.Build;
+			Matrix<double> inertiaMatrixJConverted = tmp.DenseOfArray(inertiaMatrixJ);
+			Evd<double> eigen = inertiaMatrixJConverted.Evd();
+			var temp = eigen.EigenValues;
+			return temp;
+		}
+
+		/// <summary>
+		/// Checks whether two 3 dimensional vectors are scalar to each other with a small epsilon
+		/// </summary>
+		/// <param name="first">First vector</param>
+		/// <param name="second">Second vector</param>
+		/// <returns>bool value</returns>
+		public static bool CheckDotProduct(double[] first, double[] second)
+		{
+			double result = first[0] * second[0] + first[1] * second[1] +
+			                first[2] * second[2];
+			double epsilon = 1e-16;
+			return Math.Abs(result) < epsilon;
+		}

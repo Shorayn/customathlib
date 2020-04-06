@@ -62,46 +62,6 @@ namespace CustomMathLibrary
 
             return SolveUnderdeterminedLinearEquation(a);
 
-            /*
-            
-                        OLD VERSION
-            
-            QR<float> qr = a.QR();
-            Matrix<float> q = qr.Q;
-            Matrix<float> r = qr.R;
-
-            
-            Vector<float> vPortion = Vector<float>.Build.DenseOfArray(new[] {0f, 0, 0});
-            Vector<float> wPortion = Vector<float>.Build.DenseOfArray(new[] {0f, 0, 1});
-
-            for (int i = r.RowCount - 2; i >= 0; i--)
-            {
-                // Von rechts ohne das Diagonalelement j > i
-                for (int j = r.ColumnCount - 1; j > i; j--)
-                {
-                    vPortion[i] -= r[i, j] * vPortion[j];
-                    wPortion[i] -= r[i, j] * wPortion[j];
-                }
-
-                vPortion[i] /= r[i, i];
-                wPortion[i] /= r[i, i];
-            }
-            
-            Vector<float> rV = q.Transpose() * vPortion;
-            Vector<float> rW = q.Transpose() * wPortion;
-
-
-            //  r = (r1,r2,r3) wobei bspw. ri = vi + lambda * wi ist
-            float r1 = rV[0] + 1 * rW[0];
-            float r2 = rV[1] + 1 * rW[1];
-            float r3 = rV[2] + 1 * rW[2];
-
-            CustomVector3 tempResult = new CustomVector3(r1, r2, r3);
-
-            float[] result = CustomVector3Converter.CustomVector3ToFloatArray(tempResult.normalized);
-
-            return result;
-            */
         }
 
         /// <summary>

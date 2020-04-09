@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Factorization;
 
@@ -129,5 +130,137 @@ namespace CustomMathLibrary
 
             return new[] {q, r};
         }
+
+        /// <summary>
+        /// Checks whether two 3 dimensional vectors are scalar to each other with a small epsilon
+        /// </summary>
+        /// <param name="first">First vector</param>
+        /// <param name="second">Second vector</param>
+        /// <returns>bool value</returns>
+        public static bool CheckDotProduct(double[] first, double[] second)
+        {
+            double result = first[0] * second[0] + first[1] * second[1] +
+                            first[2] * second[2];
+            double epsilon = 1e-16;
+            return Math.Abs(result) < epsilon;
+        }
+
+        /// <summary>
+        /// Calculate whether a straight line defined by its local vector and direction vector has a certain intersection with the given plane (in coordinate form)
+        /// using the lambda of the straight line
+        /// 
+        ///   http://www.songho.ca/math/line/line.html
+        ///   https://de.serlo.org/mathe/geometrie/analytische-geometrie/lagebeziehung-punkten-geraden-ebenen/lagebeziehung-geraden-einer-ebene/lagebeziehungen-geraden-ebenen
+        /// 
+        /// </summary>
+        /// <param name="planeCoords">The coefficients a, b, c, and d of the plane</param>
+        /// <param name="localVec">The local vector of the straight line</param>
+        /// <param name="dirVecPlus">+ The direction vector of the straight line</param>
+        /// <param name="dirVecMinus">- The direction vector of the straight line</param>
+        /// <returns>The intersection point as a CustomVector3</returns>
+        private CustomVector3 DetermineIntersectionForLineAndPlane(float[] planeCoords, CustomVector3 localVec,
+            CustomVector3 dirVecPlus,
+            CustomVector3 dirVecMinus)
+        {
+            float nominator = -(planeCoords[0] * localVec.x + planeCoords[1] * localVec.y +
+                                planeCoords[2] * localVec.z +
+                                planeCoords[3]);
+            float denominatorPlus = planeCoords[0] * dirVecPlus.x + planeCoords[1] * dirVecPlus.y +
+                                    planeCoords[2] * dirVecPlus.z;
+            float denominatorMinus = planeCoords[0] * dirVecMinus.x + planeCoords[1] * dirVecMinus.y +
+                                     planeCoords[2] * dirVecMinus.z;
+
+
+            
+
+            if (!float.IsNaN(nominator / denominatorPlus))
+            {
+                float lambda =
+                    nominator / denominatorPlus;
+                return localVec + lambda * dirVecPlus;
+            }
+
+            if (!float.IsNaN(nominator / denominatorMinus))
+            {
+                float lambda =
+                    nominator / denominatorMinus;
+                return localVec + lambda * dirVecPlus;
+            }
+
+            return CustomVector3.positiveInfinity;
+        }
+        
+        /// <summary>
+        ///  Converts the parameter form of a plane equation to its coordinate equivalent
+        /// </summary>
+        /// <param name="localVec">The local vector of the plane</param>
+        /// <param name="dirVecOne">The first direction vector of the plane</param>
+        /// <param name="dirVecTwo">The second direction vector of the plane</param>
+        /// <returns>The parameters a, b, c, and d of this plane</returns>
+        private float[] ConvertParameterTooCoordinateForm(CustomVector3 localVec, CustomVector3 dirVecOne, CustomVector3 dirVecTwo)
+        {
+            CustomVector3 normal = CustomVector3.Cross(dirVecOne, dirVecTwo);
+            return new[]
+            {
+                normal.x, normal.y, normal.z, -(normal.x * localVec.x + normal.y * localVec.y + normal.z * localVec.z)
+            };
+        }
+        
+        /// <summary>
+        /// Converts the coordinate form of a given plane equation to its parametric representation.
+        /// Coordinate form
+        ///                 P: a*x + b*y + c*z + d = 0
+        /// Parametric form
+        ///                 P: r0 + lambda * v + mu * u where r0, v and u are vectors
+        ///
+        ///  https://de.wikipedia.org/wiki/Parameterform
+        /// 
+        /// </summary>
+        /// <param name="parameters">The parameters d, a, b, c from plane in this order</param>
+        /// <returns>The location r0 and the two distance vectors v and u</returns>
+        public float[][] ConvertCoordinateFormToParameterForm(float[] parameters)
+        {
+            float a = parameters[1];
+            float b = parameters[2];
+            float c = parameters[3];
+            float d = parameters[0];
+
+            double epsilon = 1e-16;
+            float[] dirVecU = {-b, a, 0};
+            if (Math.Abs(dirVecU[0] + dirVecU[1] + dirVecU[2]) < epsilon)
+            {
+                
+            }
+            
+            dirVecU[0] = 0;
+            dirVecU[1] = -c;
+            dirVecU[2] = b;
+            if (Math.Abs(dirVecU[0] + dirVecU[1] + dirVecU[2]) < epsilon)
+            {
+                dirVecU[0] = -c;
+                dirVecU[1] = 0;
+                dirVecU[2] = a;
+            }
+
+
+            float[] vPortion = {0, -c, b};
+            float[] pPortion = {0f, 0, 0};
+
+            if (!float.IsNaN(d / a))
+            {
+                pPortion = new[] {d / a, 0, 0};
+            }
+            else if (!float.IsNaN(d / b))
+            {
+                pPortion = new[] {0, d / b, 0};
+            }
+            else if (!float.IsNaN(d / c))
+            {
+                pPortion = new[] {0, 0, d / c};
+            }
+
+            return new[] {pPortion, dirVecU, vPortion};
+        }
+        
     }
 }

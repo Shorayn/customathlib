@@ -15,7 +15,9 @@ namespace CustomMathLibrary
             this.z = z;
         }
         
-        private static readonly CustomVector3 zeroCusVec = new CustomVector3(0.0f,0.0f,0.0f);
+        private static readonly CustomVector3 ZeroCusVec = new CustomVector3(0.0f,0.0f,0.0f);
+        private static readonly CustomVector3 PositiveInfVec = new CustomVector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
+        private static readonly CustomVector3 NegativeInfVec = new CustomVector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
 
         public static CustomVector3 operator +(CustomVector3 a, CustomVector3 b)
         {
@@ -28,6 +30,10 @@ namespace CustomMathLibrary
         }
         
         public static CustomVector3 operator *(CustomVector3 a, float d)
+        {
+            return new CustomVector3(a.x * d, a.y * d, a.z * d);
+        }
+        public static CustomVector3 operator *(float d, CustomVector3 a)
         {
             return new CustomVector3(a.x * d, a.y * d, a.z * d);
         }
@@ -103,7 +109,9 @@ namespace CustomMathLibrary
             return (float) Math.Sqrt((double) a.x * (double) a.x + (double) a.y * (double) a.y + (double) a.z * (double) a.z);
         }
 
-        public static CustomVector3 zero => CustomVector3.zeroCusVec;
+        public static CustomVector3 zero => CustomVector3.ZeroCusVec;
+        public static CustomVector3 positiveInfinity => CustomVector3.PositiveInfVec;
+        public static CustomVector3 negativeInfinity => CustomVector3.NegativeInfVec;
 
 
         public static CustomVector3 Cross(CustomVector3 lhs, CustomVector3 rhs)

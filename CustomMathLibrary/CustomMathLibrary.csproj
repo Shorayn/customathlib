@@ -51,7 +51,6 @@
     </ItemGroup>
     <ItemGroup>
       <Content Include="customMathLib.docx" />
-      <Content Include="temp" />
     </ItemGroup>
     <ItemGroup>
       <None Include="packages.config" />
